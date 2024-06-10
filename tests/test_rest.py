@@ -54,6 +54,7 @@ async def test_update_borrower(client: TestClient, session: Session) -> None:
     updated_borrower_2 = borrower_update_2_resp.json()
     assert updated_borrower_2["total_revenue"] is None
     assert updated_borrower_2["ebitda"] == 100.0
+    assert datetime.fromisoformat(updated_borrower_2["last_modified"]) > datetime.fromisoformat(updated_borrower["last_modified"])
 
 
 @pytest.mark.asyncio

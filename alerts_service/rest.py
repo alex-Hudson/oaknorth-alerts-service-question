@@ -176,6 +176,7 @@ async def get_alerts_for_borrower(
             
     return matching_alerts
 
+
 @router.post("/alerts")
 async def create_alert(
     payload: AlertCreate,
