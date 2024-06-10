@@ -139,6 +139,43 @@ async def delete_borrower(
     )
     
 
+@router.get("/borrowers/{borrower_id}/alerts")
+async def get_alerts_for_borrower(
+    borrower_id: int,
+    session: Annotated[Session, Depends(get_session)],
+) -> list[Alert]:
+    """
+    Get alerts triggered by a borrower
+
+    :param borrower_id: ID of the borrower to update
+    :param session: SQLAlchemy ORM session injected using FastAPI dependency injection mechanism
+    :return: List of Alert objects
+    """
+    borrower = session.get(models.Borrower, borrower_id)
+    if borrower is None:
+        raise fastapi.HTTPException(404, detail="Borrower not found")
+    
+    base_query = session.query(models.Alert)
+
+    alerts = base_query.all()
+
+    matching_alerts = []
+    for alert in alerts:
+        match alert.operator:
+            case "lt":
+                if getattr(borrower, alert.data_item) < alert.value:
+                    matching_alerts.append(alert)
+            case "gt":
+                if getattr(borrower, alert.data_item) > alert.value:
+                    matching_alerts.append(alert) 
+            case "eq":
+                if getattr(borrower, alert.data_item) == alert.value:
+                    matching_alerts.append(alert) 
+            case _:
+                raise ValueError(f"Unknown operator {alert.operator}")
+            
+    return matching_alerts
+
 @router.post("/alerts")
 async def create_alert(
     payload: AlertCreate,

@@ -73,6 +73,24 @@ async def test_delete_borrower(client: TestClient, session: Session) -> None:
 
 
 @pytest.mark.asyncio
+async def test_get_alerts_for_borrower(client: TestClient, session: Session) -> None:
+    borrower = models.Borrower(name="Test Company", total_revenue=2)
+
+    triggering_alert = models.Alert(data_item="total_revenue", operator="lt", value=3)
+    non_triggering_alert = models.Alert(data_item="total_revenue", operator="lt", value=2)
+    non_triggering_alert_2 = models.Alert(data_item="total_revenue", operator="lt", value=1)
+
+    session.add_all([borrower, triggering_alert, non_triggering_alert, non_triggering_alert_2])
+    session.flush()
+
+    resp = client.get("/api/v1/borrowers/1/alerts")
+    assert resp.status_code == 200
+    alerts = resp.json()
+    assert len(alerts) == 1
+    assert alerts[0]["alert_id"] == triggering_alert.alert_id
+
+
+@pytest.mark.asyncio
 async def test_create_alert(client: TestClient, session: Session) -> None:
     resp = client.post(
         "/api/v1/alerts", json={"data_item": "total_revenue", "operator": "lt", "value": 1}
