@@ -112,6 +112,33 @@ async def list_borrowers(
     ]
 
 
+@router.delete("/borrowers/{borrower_id}")
+async def delete_borrower(
+    borrower_id: int,
+    session: Annotated[Session, Depends(get_session)],
+) -> Borrower:
+    """
+    Deletes borrower with the given borrower_id
+    :param session: SQLAlchemy ORM session injected using FastAPI dependency injection mechanism
+    :return: Deleted Borrower object
+    """
+    borrower = session.get(models.Borrower, borrower_id)
+    if borrower is None:
+        raise fastapi.HTTPException(404, detail="Borrower not found")
+
+    session.delete(borrower)
+    session.commit()
+    return Borrower(
+        borrower_id=borrower.borrower_id,
+        name=borrower.name,
+        last_modified=borrower.last_modified,
+        total_revenue=borrower.total_revenue,
+        ebitda=borrower.ebitda,
+        dscr=borrower.dscr,
+        debt_to_ebitda=borrower.debt_to_ebitda,
+    )
+    
+
 @router.post("/alerts")
 async def create_alert(
     payload: AlertCreate,
@@ -157,6 +184,31 @@ async def list_alerts(session: Annotated[Session, Depends(get_session)]) -> list
         )
         for alert in alerts
     ]
+
+
+@router.delete("/alerts/{alert_id}")
+async def delete_alert(
+    alert_id: int,
+    session: Annotated[Session, Depends(get_session)],
+) -> Alert:
+    """
+    Deletes alert with the given alert_id
+    :param session: SQLAlchemy ORM session injected using FastAPI dependency injection mechanism
+    :return: Deleted Alert object
+    """
+    alert = session.get(models.Alert, alert_id)
+    if alert is None:
+        raise fastapi.HTTPException(404, detail="Alert not found")
+
+    session.delete(alert)
+    session.commit()
+    return Alert(
+        alert_id=alert.alert_id,
+        data_item=alert.data_item,
+        operator=alert.operator,
+        value=alert.value,
+        last_modified=alert.last_modified,
+    )
 
 
 @router.get("/alerts/{alert_id}/borrowers")

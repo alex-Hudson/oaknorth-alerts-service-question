@@ -57,6 +57,22 @@ async def test_update_borrower(client: TestClient, session: Session) -> None:
 
 
 @pytest.mark.asyncio
+async def test_delete_borrower(client: TestClient, session: Session) -> None:
+    borrower = models.Borrower(name="Test Company")
+    session.add(borrower)
+    session.flush()
+    session.refresh(borrower)
+
+    resp = client.delete("/api/v1/borrowers/1")
+    assert resp.status_code == 200
+    borrower_json = resp.json()
+    assert borrower_json["name"] == "Test Company"
+    assert borrower_json["total_revenue"] is None
+    assert borrower_json["borrower_id"] > 0
+    assert datetime.fromisoformat(borrower_json["last_modified"]) is not None
+
+
+@pytest.mark.asyncio
 async def test_create_alert(client: TestClient, session: Session) -> None:
     resp = client.post(
         "/api/v1/alerts", json={"data_item": "total_revenue", "operator": "lt", "value": 1}
@@ -98,3 +114,20 @@ async def test_triggered_alert(client: TestClient, session: Session) -> None:
     ).json()
     assert len(triggered_borrowers) == 1
     assert triggered_borrowers[0]["borrower_id"] == bad_borrower.borrower_id
+
+
+@pytest.mark.asyncio
+async def test_delete_alert(client: TestClient, session: Session) -> None:
+    alert = models.Alert(data_item="total_revenue", operator="lt", value=1)
+    session.add(alert)
+    session.flush()
+    session.refresh(alert)
+    resp = client.delete(
+        "/api/v1/alerts/1"
+    )
+    alert_json = resp.json()
+    assert alert_json["data_item"] == "total_revenue"
+    assert alert_json["operator"] == "lt"
+    assert alert_json["value"] == 1.0
+    assert alert_json["alert_id"] > 0
+    assert datetime.fromisoformat(alert_json["last_modified"]) is not None
