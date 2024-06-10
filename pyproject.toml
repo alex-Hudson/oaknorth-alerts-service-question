@@ -1,0 +1,46 @@
+[tool.poetry]
+name = "alerts-service"
+version = "0.1.0"
+description = ""
+authors = ["ONci <engineers@onci.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.109.0"
+psycopg = "^3.1.17"
+uvicorn = "^0.25.0"
+alembic = "^1.13.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.4"
+mypy = "^1.8.0"
+black = "^23.12.1"
+isort = "^5.13.2"
+testcontainers = "^3.7.1"
+pytest-asyncio = "^0.23.3"
+httpx = "^0.26.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 95
+target-version = ["py311"]
+skip-string-normalization = false
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | migrations
+)/
+'''

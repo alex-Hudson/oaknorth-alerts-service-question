@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: alerts
+    ports:
+      - "5432:5432"
+
+  alerts-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: "alerts-service:${VERSION}"
+    environment:
+      DB_USERNAME: myuser
+      DB_PASSWORD: mypassword
+      DB_DATABASE: alerts
+      DB_HOST: postgres
+    ports:
+      - "8000:8000"
+    volumes:
+      - ".:/code"
