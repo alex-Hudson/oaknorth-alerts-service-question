@@ -62,7 +62,6 @@ async def test_delete_borrower(client: TestClient, session: Session) -> None:
     borrower = models.Borrower(name="Test Company")
     session.add(borrower)
     session.flush()
-    session.refresh(borrower)
 
     resp = client.delete("/api/v1/borrowers/1")
     assert resp.status_code == 200
@@ -140,7 +139,6 @@ async def test_delete_alert(client: TestClient, session: Session) -> None:
     alert = models.Alert(data_item="total_revenue", operator="lt", value=1)
     session.add(alert)
     session.flush()
-    session.refresh(alert)
     resp = client.delete(
         "/api/v1/alerts/1"
     )

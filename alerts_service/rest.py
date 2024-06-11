@@ -156,7 +156,6 @@ async def get_alerts_for_borrower(
         raise fastapi.HTTPException(404, detail="Borrower not found")
     
     base_query = session.query(models.Alert)
-
     alerts = base_query.all()
 
     matching_alerts = []
