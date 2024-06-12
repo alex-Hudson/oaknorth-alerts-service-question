@@ -35,6 +35,7 @@ class Borrower(Base):
     last_modified: Mapped[datetime] = mapped_column(
         server_default=sa.text("(now() at time zone 'utc')")
     )
+    dismissed_alerts: Mapped[Optional[list[int]]] = mapped_column(sa.ARRAY(sa.Integer))
 
     def __repr__(self) -> str:
         return (
@@ -45,4 +46,5 @@ class Borrower(Base):
             f"dscr={self.dscr!r}, "
             f"debt_to_ebitda={self.debt_to_ebitda!r}, "
             f"last_modified={self.last_modified!r})"
+            f"dismissed_alerts={self.dismissed_alerts!r})"
         )

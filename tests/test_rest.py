@@ -58,6 +58,42 @@ async def test_update_borrower(client: TestClient, session: Session) -> None:
 
 
 @pytest.mark.asyncio
+async def test_add_dismiss_alert(client: TestClient, session: Session) -> None:
+    borrower = models.Borrower(name="Test Company")
+    alert = models.Alert(data_item="total_revenue", operator="lt", value=1)
+
+    session.add_all([borrower, alert])
+    session.flush()
+    session.refresh(borrower)
+    alert_id = alert.alert_id
+
+    borrower_update_resp = client.patch(
+        f"/api/v1/borrowers/{borrower.borrower_id}/dismiss/{alert_id}",
+    )
+    assert borrower_update_resp.status_code == 200
+    updated_borrower = borrower_update_resp.json()
+    assert updated_borrower["dismissed_alerts"] == [alert_id]
+
+
+@pytest.mark.asyncio
+async def test_add_dismiss_alert_with_existing_alert(client: TestClient, session: Session) -> None:
+    borrower = models.Borrower(name="Test Company", dismissed_alerts=[2])
+    alert = models.Alert(data_item="total_revenue", operator="lt", value=1)
+
+    session.add_all([borrower, alert])
+    session.flush()
+    session.refresh(borrower)
+    alert_id = alert.alert_id
+
+    borrower_update_resp = client.patch(
+        f"/api/v1/borrowers/{borrower.borrower_id}/dismiss/{alert_id}",
+    )
+    assert borrower_update_resp.status_code == 200
+    updated_borrower = borrower_update_resp.json()
+    assert updated_borrower["dismissed_alerts"] == [2, alert_id]
+
+
+@pytest.mark.asyncio
 async def test_delete_borrower(client: TestClient, session: Session) -> None:
     borrower = models.Borrower(name="Test Company")
     session.add(borrower)
@@ -132,6 +168,28 @@ async def test_triggered_alert(client: TestClient, session: Session) -> None:
     ).json()
     assert len(triggered_borrowers) == 1
     assert triggered_borrowers[0]["borrower_id"] == bad_borrower.borrower_id
+
+
+@pytest.mark.asyncio
+async def test_triggered_alert_with_dismissal(client: TestClient, session: Session) -> None:
+    alert = models.Alert(data_item="total_revenue", operator="lt", value=1)
+    session.add(alert)
+    session.flush()
+
+    good_borrower = models.Borrower(name="Good Company", total_revenue=100.0)
+    bad_borrower = models.Borrower(name="Bad Company", total_revenue=0.0, dismissed_alerts=[alert.alert_id])
+    bad_borrower_2 = models.Borrower(name="Bad Company", total_revenue=0.0)
+
+    null_borrower = models.Borrower(name="Null Company")
+    session.add_all([good_borrower, bad_borrower, null_borrower, bad_borrower_2])
+    session.flush()
+
+    print('*********', alert.alert_id)
+    triggered_borrowers = client.get(
+        f"/api/v1/alerts/{alert.alert_id}/borrowers"
+    ).json()
+    assert len(triggered_borrowers) == 1
+    assert triggered_borrowers[0]["borrower_id"] == bad_borrower_2.borrower_id
 
 
 @pytest.mark.asyncio

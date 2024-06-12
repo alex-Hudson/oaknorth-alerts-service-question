@@ -1,0 +1,11 @@
+Task: To allow a user to dismiss alerts
+Steps:
+- Add a route PUT called /api/v1/borrowers/:borrower_id/dismiss/:alert_d
+- That route will
+1. Get the borrower from the db
+2. Update the borrower record with the id of the dismissed alerts
+- Update borrower types
+
+{
+    dismissed_alerts: [1,2,3]
+}

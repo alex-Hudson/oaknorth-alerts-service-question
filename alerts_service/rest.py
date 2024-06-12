@@ -88,6 +88,48 @@ async def update_borrower(
     )
 
 
+@router.patch("/borrowers/{borrower_id}/dismiss/{alert_id}")
+async def add_dismiss_alert(
+    borrower_id: int,
+    alert_id: int,
+    session: Annotated[Session, Depends(get_session)],
+) -> Borrower:
+    """
+    Update an existing borrower with dismissed alerts given a borrower ID and alert ID
+
+    :param borrower_id: ID of the borrower to update
+    :param alert_id: ID of the alert
+    :param session: SQLAlchemy ORM session injected using FastAPI dependency injection mechanism
+    :return: Borrower - the full Borrower model after the update has been applied
+    """
+    borrower = session.get(models.Borrower, borrower_id)
+    if borrower is None:
+        raise fastapi.HTTPException(404, detail="Borrower not found")
+
+    alert = session.get(models.Alert, alert_id)
+    if alert is None:
+        raise fastapi.HTTPException(404, detail="Alert not found")
+
+    if borrower.dismissed_alerts is None:
+        borrower.dismissed_alerts = [alert.alert_id]
+    else:
+        temp = list(borrower.dismissed_alerts)
+        temp.append(alert.alert_id)
+        borrower.dismissed_alerts = temp
+
+    session.commit()
+    return Borrower(
+        borrower_id=borrower.borrower_id,
+        name=borrower.name,
+        last_modified=borrower.last_modified,
+        total_revenue=borrower.total_revenue,
+        ebitda=borrower.ebitda,
+        dscr=borrower.dscr,
+        debt_to_ebitda=borrower.debt_to_ebitda,
+        dismissed_alerts=borrower.dismissed_alerts,
+    )
+
+
 @router.get("/borrowers")
 async def list_borrowers(
     session: Annotated[Session, Depends(get_session)],
@@ -254,7 +296,7 @@ async def get_triggered_borrowers(
     session: Annotated[Session, Depends(get_session)],
 ) -> list[Borrower]:
     """
-    Return the borrowers who have triggered an alert with a given alert_id
+    Return the borrowers who have triggered an alert with a given alert_id taking into account dismissed alerts
     :param alert_id: The ID of the Alert
     :param session: SQLAlchemy ORM session injected using FastAPI dependency injection mechanism
     :return: List of Borrower objects which have triggered the Alert
@@ -274,6 +316,14 @@ async def get_triggered_borrowers(
             raise ValueError(f"Unknown operator {alert.operator}")
 
     borrowers = query.all()
+
+    print('1', borrowers)
+
+    for borrower in borrowers:
+        print('2', borrower.dismissed_alerts)
+        if borrower.dismissed_alerts is not None:
+            if alert.alert_id in borrower.dismissed_alerts:
+                borrowers.remove(borrower)
 
     return [
         Borrower(

@@ -14,7 +14,7 @@ format:
 	poetry run isort .
 
 test:
-	poetry run pytest tests
+	poetry run pytest -s tests 
 
 help:
 	@echo "build - Build the docker image"

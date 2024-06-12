@@ -13,6 +13,7 @@ class Borrower(BaseModel):
     ebitda: Optional[float] = None
     dscr: Optional[float] = None
     debt_to_ebitda: Optional[float] = None
+    dismissed_alerts: Optional[list[int]] = None
 
 
 class BorrowerCreate(BaseModel):
